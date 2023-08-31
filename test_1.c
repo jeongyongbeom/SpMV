@@ -2,7 +2,8 @@
 
 int main(void){
 
-	pritnf("Hellw github");
+	pritnf("Hellow github");
 
+	pritnf("Hellow github");
 }
 
