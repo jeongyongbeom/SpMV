@@ -2,15 +2,13 @@
 
 module SpMV_fp16_add(i_clk, i_rstn, mul_result, reg_result, result);
     
-    parameter fp16 = 16;
-    
     input i_clk, i_rstn;
     input [15:0] mul_result, reg_result;
     
     output reg [15:0] result;
     
-    reg [16*fp16-1:0] matrix [0:15];
-    reg [fp16-1:0] sum [0:15];
+    reg [255:0] matrix [0:15];
+    reg [15:0] sum [0:15];
     
     reg [11:0] b_ALU_result; 
 	 

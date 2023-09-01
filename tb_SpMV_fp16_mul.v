@@ -25,4 +25,10 @@ module tb_SpMV_fp16_mul();
 		$finish;
 	end
 
+	initial begin
+		$dumpfile("tb_SpMV_fp16_mul.vcd");
+		$dumpvars(0, tb_SpMV_fp16_mul);
+	end
+
+
 endmodule

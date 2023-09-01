@@ -10,7 +10,7 @@ module tb_SpMV_fp16_add();
 	wire [15:0] result;
 	
 
-	SpMV_fp16_add #(.fp16(fp16)) uut(.i_clk(i_clk), .i_rstn(i_rstn), .mul_result(mul_result), .reg_result(reg_result), .result(result));
+	SpMV_fp16_add uut(.i_clk(i_clk), .i_rstn(i_rstn), .mul_result(mul_result), .reg_result(reg_result), .result(result));
 	
 	
 	initial begin
