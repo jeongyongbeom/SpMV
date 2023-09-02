@@ -19,8 +19,8 @@ module tb_SpMV_fp16_mul();
    end
 	
 	initial begin
-		vector = 16'b0_10011_0000000000;
-		value  = 16'b0_10000_0000000000;
+		vector = 16'b0_10001_1100000000;
+		value  = 16'b0_10000_1000000000;
 		#400
 		$finish;
 	end

@@ -33,5 +33,12 @@ module tb_SpMV_fp16_add();
 		#400
 		$finish;
 	end
+
+	initial begin
+		$dumpfile("tb_SpMV_fp16_add.vcd");
+		$dumpvars(0, tb_SpMV_fp16_add);
+	end
+
+
 endmodule
 
