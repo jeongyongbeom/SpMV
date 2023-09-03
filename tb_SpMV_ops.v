@@ -92,14 +92,6 @@ module tb_SpMV_ops();
 		#74 count = 10;
 	end
 
-	integer idx;
-	initial begin
-		$dumpfile("tb_SpMV_ops.vcd");
-		for(idx = 0; idx <16; idx = idx +1) begin
-			$dumpvars(0, register[idx]);
-		end
-	end
-	reg [15:0] register [0:15];
 	initial begin
 		$dumpfile("tb_SpMV_ops.vcd");
 		$dumpvars(0,tb_SpMV_ops);
