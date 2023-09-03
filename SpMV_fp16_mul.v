@@ -10,7 +10,7 @@ module SpMV_fp16_mul(i_clk, i_rstn, vector, value, result);
     reg [21:0] P;
     
     // Transfer input vector and value to register.
-    always @(posedge i_clk or negedge i_rstn) begin
+    always @(posedge i_clk, negedge i_rstn) begin
         if(!i_rstn) begin
 				result = 16'b0;
         end else begin

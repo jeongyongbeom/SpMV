@@ -1,9 +1,11 @@
 `timescale 1ns / 1ps
 
-module tb_SpMV_ops();
+module tb_SpMV_core();
 
 	reg			i_clk;
 	reg			i_rstn;
+
+	reg			i_start;
 
 	reg	[15:0]	i_read_data_A;
 	reg [15:0]	i_read_data_B;
@@ -11,22 +13,26 @@ module tb_SpMV_ops();
 	reg [7:0]	count;
 	reg [135:0] row_ptr;
 
+	wire 		 o_done;
 	wire [255:0] o_register;
 
-	SpMV_ops uut(
+	SpMV_core uut(
 		.i_clk(i_clk),
 		.i_rstn(i_rstn),
+		.i_start(i_start),
 		.i_read_data_A(i_read_data_A),
 		.i_read_data_B(i_read_data_B),
 		.count(count),
 		.row_ptr(row_ptr),
-
+	
+		.o_done(o_done),
 		.o_register(o_register)
 	);
 
 	initial begin
-		i_clk = 1'b0; i_rstn = 1'b0;
+		i_clk = 1'b0; i_rstn = 1'b0; i_start = 1'b0;
 		#30 i_rstn = 1'b1;
+		#17 i_start = 1'b1;
 	end
 
 	always begin
@@ -93,8 +99,8 @@ module tb_SpMV_ops();
 	end
 
 	initial begin
-		$dumpfile("tb_SpMV_ops.vcd");
-		$dumpvars(0,tb_SpMV_ops);
+		$dumpfile("tb_SpMV_core.vcd");
+		$dumpvars(0,tb_SpMV_core);
 	end
 
 
