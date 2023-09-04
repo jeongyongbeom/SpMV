@@ -1,10 +1,10 @@
 `timescale 1ns / 1ps
 
+
 module tb_SpMV_core();
 
 	reg			i_clk;
 	reg			i_rstn;
-
 	reg			i_start;
 
 	reg	[15:0]	i_read_data_A;
@@ -32,7 +32,7 @@ module tb_SpMV_core();
 	initial begin
 		i_clk = 1'b0; i_rstn = 1'b0; i_start = 1'b0;
 		#30 i_rstn = 1'b1;
-		#17 i_start = 1'b1;
+		#44 i_start = 1'b1;
 	end
 
 	always begin
@@ -45,31 +45,31 @@ module tb_SpMV_core();
 		#74	// A = 16, B = 2
 		i_read_data_A = 16'b0_10011_0000000000;
 		i_read_data_B = 16'b0_10000_0000000000;
-		#74
+		#40	// A = 3, B = 7
+		i_read_data_A = 16'b0_10000_1000000000;
+		i_read_data_B = 16'b0_10001_1100000000;
+		#40
 		i_read_data_A = 16'b0_10011_0000000000;
 		i_read_data_B = 16'b0_10000_0000000000;
-		#74
+		#40
 		i_read_data_A = 16'b0_10011_0000000000;
 		i_read_data_B = 16'b0_10000_0000000000;
-		#74
+		#40
 		i_read_data_A = 16'b0_10011_0000000000;
 		i_read_data_B = 16'b0_10000_0000000000;
-		#74
+		#40
 		i_read_data_A = 16'b0_10011_0000000000;
 		i_read_data_B = 16'b0_10000_0000000000;
-		#74
+		#40
 		i_read_data_A = 16'b0_10011_0000000000;
 		i_read_data_B = 16'b0_10000_0000000000;
-		#74
+		#40
 		i_read_data_A = 16'b0_10011_0000000000;
 		i_read_data_B = 16'b0_10000_0000000000;
-		#74
+		#40
 		i_read_data_A = 16'b0_10011_0000000000;
 		i_read_data_B = 16'b0_10000_0000000000;
-		#74
-		i_read_data_A = 16'b0_10011_0000000000;
-		i_read_data_B = 16'b0_10000_0000000000;
-		#74
+		#40
 		i_read_data_A = 16'b0_10011_0000000000;
 		i_read_data_B = 16'b0_10000_0000000000;
 
@@ -77,7 +77,6 @@ module tb_SpMV_core();
 		$finish;
 
 	end
-
 
 	initial begin
 		row_ptr = 0;
@@ -87,17 +86,17 @@ module tb_SpMV_core();
 	initial begin
 		count = 0;
 		#74 count = 1;
-		#74 count = 2;
-		#74 count = 3;
-		#74 count = 4;
-		#74 count = 5;
-		#74 count = 6;
-		#74 count = 7;
-		#74 count = 8;
-		#74 count = 9;
-		#74 count = 10;
+		#40 count = 2;
+		#40 count = 3;
+		#40 count = 4;
+		#40 count = 5;
+		#40 count = 6;
+		#40 count = 7;
+		#40 count = 8;
+		#40 count = 9;
+		#40 count = 10;
 	end
-
+	
 	initial begin
 		$dumpfile("tb_SpMV_core.vcd");
 		$dumpvars(0,tb_SpMV_core);
@@ -105,7 +104,3 @@ module tb_SpMV_core();
 
 
 endmodule
-
-
-		
-
