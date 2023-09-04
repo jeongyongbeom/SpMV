@@ -15,29 +15,7 @@ module SpMV_core(
 	
 	output  			o_done,
 	output [255:0]		o_register
-<<<<<<< HEAD
-);	
-	parameter IDLE		= 3'b000;
-	parameter MUL 		= 3'b001;
-	parameter REG_READ  = 3'b010;
-	parameter ADD		= 3'b011;
-	parameter REG_WRITE	= 3'b100;
-
-	integer i;
-
-	genvar k;
-	generate
-		for(k=0; k<16; k=k+1) begin: OUTPUT_SORTING
-			assign o_register[16*k +: 16] = register[k];
-		end
-	endgenerate
-	
-	
-	reg [2:0] current_state;
-	reg [2:0] next_state;
-=======
 );
->>>>>>> 1a99ca8 (improved)
 
     parameter IDLE  = 3'b00;
     parameter LOAD  = 3'b001;
@@ -77,44 +55,6 @@ module SpMV_core(
 			ADD: begin
 			                     next_state <= WRITE;
 			end
-<<<<<<< HEAD
-			REG_WRITE: begin
-				if(o_done)	next_state <= IDLE;
-				else		next_state <= MUL;
-			end
-			default: 		next_state <= IDLE;
-		endcase
-	end
-	
-	assign o_done = ((count != 8'b0)&&(count[3:0] == 4'b0)) ? 1'b1: 1'b0;
-	
-	reg [15:0] register [0:15];
-	reg [3:0] reg_addr;
-
-	wire [15:0] mul_result;
-	wire [15:0] reg_result = (current_state == REG_READ)? register[reg_addr]: 16'b0;
-
-	wire [15:0] out;
-
-	SpMV_fp16_mul multiplication(
-		.i_clk(i_clk),
-		.i_rstn(i_rstn),
-		.vector(i_read_data_A),
-		.value(i_read_data_B),
-
-		.result(mul_result)
-	);
-	
-	SpMV_fp16_add addition(
-		.i_clk(i_clk),
-		.i_rstn(i_rstn),
-		.mul_result(mul_result),
-		.reg_result(reg_result),
-
-		.result(out)
-	);
-
-=======
 			WRITE: begin
 			    if(w_finish)     next_state <= IDLE;
 				else		     next_state <= LOAD;
@@ -141,20 +81,14 @@ module SpMV_core(
 		end
 	endgenerate
 	
->>>>>>> 1a99ca8 (improved)
 	always @(posedge i_clk, negedge i_rstn) begin
 		if(!i_rstn) begin
 			for(i=0; i<16; i=i+1) begin
 				register[i] <= 16'b0;
 			end
 		end else begin
-<<<<<<< HEAD
-			if(current_state == REG_WRITE)  register[reg_addr] <= out;
-			else							register[reg_addr] <= register[reg_addr];
-=======
 			if(state == ADD) register[reg_addr] <= out;
 			else			   register[reg_addr] <= register[reg_addr];
->>>>>>> 1a99ca8 (improved)
 		end
 	end
 	
