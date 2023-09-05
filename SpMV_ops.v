@@ -4,76 +4,52 @@ module SpMV_ops(
 
 	input			i_clk,
 	input			i_rstn,
+	input			i_start,
 
 	input [15:0]	i_read_data_A,
+	input 
+
 	input [15:0]	i_read_data_B,
 
-	input [7:0]		count,
-	input [135:0]	row_ptr,
 
 	output [255:0]	o_register
 );
-	
-	reg [15:0] register [0:15];
-	
-	genvar k;
 
-	generate
-		for(k=0; k<16; k=k+1) begin: OUTPUT_SORTING
-			assign o_register[16*k +: 16] = register[k];
-		end
-	endgenerate
-			
-	
-	integer i;	
-
-	reg [3:0] reg_addr;
-	
-	wire [15:0] mul_result;
-	wire [15:0] reg_result = register[reg_addr];
-
-	wire [15:0] out;
-
-	SpMV_fp16_mul multiplication(
-		.i_clk(i_clk),
-		.i_rstn(i_rstn),
-		.vector(i_read_data_A),
-		.value(i_read_data_B),
-
-		.result(mul_result)
-	);
-	
-	SpMV_fp16_add addition(
-		.i_clk(i_clk),
-		.i_rstn(i_rstn),
-		.mul_result(mul_result),
-		.reg_result(reg_result),
-
-		.result(out)
-	);
+	parameter IDLE	= 3'b000;
+	parameter READ  = 3'b001;
+	parameter CORE	= 3'b010;
+	parameter WRITE = 3'b011;
+	parameter DONE	= 3'b100;
 
 	always @(posedge i_clk, negedge i_rstn) begin
-		if(!i_rstn) begin
-			for(i=0; i<16; i=i+1) begin
-				register[i] <= 16'b0;
-			end
-		end else begin
-			register[reg_addr] <= out;
-		end
+		if(!i_rstn)	state <= IDLE;
+		else		state <= next_state;
 	end
 
-	// To get register address using comparator
 	always @(*) begin
-		if(!i_rstn) reg_addr <= 4'b0;
-		else begin
-			for(i=0; i<16; i=i+1) begin
-				if((row_ptr[i*8 +: 8] < count) && (count <= row_ptr[(i+1)*8 +: 8])) begin
-					reg_addr <= i;
-				end
+		case(state)
+			IDLE: begin
+				if(i_start)	next_state <= READ;
+				else		next_state <= IDLE;
 			end
-		end
+			READ: begin
+				if(read_done)	next_state <= CORE;
+				else			next_state <= READ;
+			end
+			CORE: begin
+				if(core_done)	next_state <= WRITE;
+				else			next_state <= CORE;
+			end
+			WRITE: begin
+				if(write_done)	next_state <= DONE;
+				else			next_state <= WRITE;
+			DONE: begin
+								next_state <= IDLE;
+			end
+			default:			next_state <= IDLE;
+		endcase
 	end
 
 
-	endmodule
 
+	
