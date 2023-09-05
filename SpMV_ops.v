@@ -76,13 +76,13 @@ module SpMV_ops(
       );
       
     M10K_read_col_index_buffer(
-        .i_clk(i_clk),
+		.i_clk(i_clk),
         .i_rstn(i_rstn),
         .i_read_data(i_read_data_B),
         
-      .o_read_addr(o_addr_col_idx),
-      .o_in_vector(o_col_idx),
-      .o_state(o_col_idx_read_done)
+		.o_read_addr(o_addr_col_idx),
+		.o_in_vector(o_col_idx),
+		.o_state(o_col_idx_read_done)
       );
       
     M10K_read_row_ptr_buffer(
@@ -90,9 +90,9 @@ module SpMV_ops(
         .i_rstn(i_rstn),
         .i_read_data(i_read_data_B),
         
-      .o_read_addr(o_addr_row_ptr),
-      .o_in_vector(o_row_ptr),
-      .o_state(o_row_ptr_read_done)
+		.o_read_addr(o_addr_row_ptr),
+		.o_in_vector(o_row_ptr),
+		.o_state(o_row_ptr_read_done)
       );
       
       
