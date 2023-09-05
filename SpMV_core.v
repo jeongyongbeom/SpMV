@@ -1,5 +1,23 @@
-`timescale 1ns / 1ns
-
+`timescale 1ns / 1ps
+//////////////////////////////////////////////////////////////////////////////////
+// Company: 
+// Engineer: 
+// 
+// Create Date: 2023/09/04 00:48:26
+// Design Name: 
+// Module Name: SpMV_core
+// Project Name: 
+// Target Devices: 
+// Tool Versions: 
+// Description: 
+// 
+// Dependencies: 
+// 
+// Revision:
+// Revision 0.01 - File Created
+// Additional Comments:
+// 
+//////////////////////////////////////////////////////////////////////////////////
 
 module SpMV_core(
 
@@ -9,7 +27,6 @@ module SpMV_core(
 
 	input [15:0]		i_read_data_A,
 	input [15:0]		i_read_data_B,
-
 	input [7:0]			count,
 	input [135:0]		row_ptr,
 	
@@ -17,7 +34,7 @@ module SpMV_core(
 	output [255:0]		o_register
 );
 
-    parameter IDLE  = 3'b00;
+    parameter IDLE  = 3'b000;
     parameter LOAD  = 3'b001;
     parameter MUL   = 3'b010;
     parameter ADD   = 3'b011;
@@ -33,7 +50,8 @@ module SpMV_core(
 	end
    
    // Signal Declaration 
-	wire w_finish = ((count != 8'b0) && (count[3:0] == 4'b0)) ? 1'b1: 1'b0;
+   
+	wire w_finish = (state == WRITE) && ((row_ptr[135:128] == count) | ((count != 8'b0) && (count[3:0] == 4'b0))) ? 1'b1: 1'b0;
 	assign o_done = w_finish;
    
    wire [15:0] mat_vector, in_vector;
@@ -64,6 +82,7 @@ module SpMV_core(
 	end
 
 	wire [15:0] mul_result;
+	wire [15:0] reg_result;
 	
 	reg [15:0] register [0:15];
 	reg [3:0] reg_addr;
@@ -97,7 +116,7 @@ module SpMV_core(
 		if(!i_rstn) reg_addr <= 4'b0;
 		else begin
 			for(i=0; i<16; i=i+1) begin
-				if((row_ptr[i*8 +: 8] < count) && (count <= row_ptr[(i+1)*8 +: 8])) begin
+				if((row_ptr[i*8 +: 8] < count+1) && (count+1 <= row_ptr[(i+1)*8 +: 8])) begin
 					reg_addr <= i;
 				end
 			end
@@ -123,3 +142,4 @@ module SpMV_core(
 	);
 
 endmodule
+

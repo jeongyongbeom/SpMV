@@ -1,4 +1,23 @@
 `timescale 1ns / 1ps
+//////////////////////////////////////////////////////////////////////////////////
+// Company: 
+// Engineer: 
+// 
+// Create Date: 2023/09/04 00:49:34
+// Design Name: 
+// Module Name: tb_SpMV_core
+// Project Name: 
+// Target Devices: 
+// Tool Versions: 
+// Description: 
+// 
+// Dependencies: 
+// 
+// Revision:
+// Revision 0.01 - File Created
+// Additional Comments:
+// 
+//////////////////////////////////////////////////////////////////////////////////
 
 
 module tb_SpMV_core();
@@ -33,6 +52,7 @@ module tb_SpMV_core();
 		i_clk = 1'b0; i_rstn = 1'b0; i_start = 1'b0;
 		#30 i_rstn = 1'b1;
 		#44 i_start = 1'b1;
+		#400 i_start = 1'b0;
 	end
 
 	always begin
@@ -70,8 +90,8 @@ module tb_SpMV_core();
 		i_read_data_A = 16'b0_10011_0000000000;
 		i_read_data_B = 16'b0_10000_0000000000;
 		#40
-		i_read_data_A = 16'b0_10011_0000000000;
-		i_read_data_B = 16'b0_10000_0000000000;
+		i_read_data_A = 16'b0_10000_1000000000;
+		i_read_data_B = 16'b0_10001_1100000000;
 
 		#400
 		$finish;
@@ -85,7 +105,8 @@ module tb_SpMV_core();
 	
 	initial begin
 		count = 0;
-		#74 count = 1;
+		#74 count = 0;
+		#40 count = 1;
 		#40 count = 2;
 		#40 count = 3;
 		#40 count = 4;
@@ -97,10 +118,11 @@ module tb_SpMV_core();
 		#40 count = 10;
 	end
 	
-	initial begin
-		$dumpfile("tb_SpMV_core.vcd");
-		$dumpvars(0,tb_SpMV_core);
-	end
+//	initial begin
+//		$dumpfile("tb_SpMV_core.vcd");
+//		$dumpvars(0,tb_SpMV_core);
+//	end
 
 
 endmodule
+
