@@ -70,7 +70,7 @@ module SpMV_ops(
 	wire o_col_idx;
 	
 	wire [15:0] in_vector;
-	assign in_vector = o_in_vector[o_col_idx[count *4 +; 0]];
+	assign in_vector = o_in_vector[o_col_idx[count*4 +: 4 ]*4 +: 4];
 
    M10K_read_SRAM0(
       .i_clk(i_clk),
