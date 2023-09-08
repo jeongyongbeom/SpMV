@@ -8,8 +8,7 @@ module SpMV_ops(
     input [15:0]   i_read_data_A,
     input [15:0]   i_read_data_B,
 
-
-	output [255:0]   o_register
+	output [255:0]   o_result
 );
 
 	parameter IDLE	= 3'b000;
@@ -29,6 +28,12 @@ module SpMV_ops(
    // Signal Declaration
    wire read_done, core_done, write_done;
    wire read_A_done, read_B_done;
+   wire core_start;
+   wire o_row_ptr;
+   wire core_done;
+   wire register;
+   
+   assign core_start = (state == READ) && (next_state == CORE);
    assign read_done = (read_A_done && read_B_done)? 1'b1: 1'b0;
    
 
@@ -72,6 +77,17 @@ module SpMV_ops(
 	wire [15:0] in_vector;
 	assign in_vector = o_in_vector[o_col_idx[count*4 +: 4 ]*4 +: 4];
 
+	// Counter
+	always @(posedge i_clk, negedge i_rstn) begin
+		if(!i_rstn) count <= 256'b0;
+		else if(core_done) begin
+			count <= count + 1'b1;
+		end else begin
+			count <= count;
+		end
+	end		
+
+
    M10K_read_SRAM0(
       .i_clk(i_clk),
       .i_rstn(i_rstn),
@@ -105,12 +121,26 @@ module SpMV_ops(
 	SpMV_core(
 		.i_clk(i_clk),
 		.i_rstn(i_rstn),
-
-
-
+		.i_start(core_start),
+		
+		.i_read_data_A(o_mat_vector),
+		.i_read_data_B(in_vector),
 		.count(count),
-		.
-     
+		.row_ptr(o_row_ptr),
+		
+		.o_done(),
+		.o_register(register)
+	);
+
+	M10K_write_SRAM1(
+		.i_clk(i_clk),
+		.i_rstn(i_rstn),
+		.i_write_start(write_start),
+		.i_write_data(o_register),
+
+		.o_write_data(o_result)
+	);
+		
         
 	 
 	endmodule

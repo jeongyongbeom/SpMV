@@ -82,18 +82,7 @@ module M10K_read_SRAM0(
 
 	// Output
 	assign o_mat_vector = buffer_mat_vector[(count%16)*16 +: 16];
-
-
-	
-
-
-
-
-
-
-
-
-
+	assign o_in_vector = buffer_in_vector;
 
 
 endmodule

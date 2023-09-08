@@ -1,23 +1,4 @@
 `timescale 1ns / 1ps
-//////////////////////////////////////////////////////////////////////////////////
-// Company: 
-// Engineer: 
-// 
-// Create Date: 2023/09/04 00:48:26
-// Design Name: 
-// Module Name: SpMV_core
-// Project Name: 
-// Target Devices: 
-// Tool Versions: 
-// Description: 
-// 
-// Dependencies: 
-// 
-// Revision:
-// Revision 0.01 - File Created
-// Additional Comments:
-// 
-//////////////////////////////////////////////////////////////////////////////////
 
 module SpMV_core(
 
@@ -50,8 +31,7 @@ module SpMV_core(
 	end
    
    // Signal Declaration 
-   
-	wire w_finish = (state == WRITE) && ((row_ptr[135:128] == count) | ((count != 8'b0) && (count[3:0] == 4'b0))) ? 1'b1: 1'b0;
+	wire w_finish = ((state == WRITE) && ((row_ptr[135:128] == count) | ((count != 8'b0) && (count[3:0] == 4'b0)))) ? 1'b1: 1'b0;
 	assign o_done = w_finish;
    
    wire [15:0] mat_vector, in_vector;
