@@ -20,7 +20,6 @@ module M10K_read_SRAM0(
 	parameter MAT_READ	= 2'b10;
 	parameter DONE		= 2'b11;
 
-
 	//Signal Declaration
 	reg [255:0] buffer_in_vector;
 	reg [255:0] buffer_mat_vector;
