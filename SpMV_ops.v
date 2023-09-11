@@ -1,3 +1,4 @@
+`timescale 1ns / 1ps
 
 module SpMV_ops(
 
@@ -5,17 +6,30 @@ module SpMV_ops(
 	input         i_rstn,
 	input         i_start,
 
-    input [15:0]   i_read_data_A,
-    input [15:0]   i_read_data_B,
+    input [255:0]   i_read_data_A,
+    input [255:0]   i_read_data_B,
 
 	output [255:0]   o_result
 );
-
+    
+    // Parameter for SpMV_ops Module
 	parameter IDLE	= 3'b000;
 	parameter READ  = 3'b001;
 	parameter CORE	= 3'b010;
 	parameter WRITE = 3'b011;
 	parameter DONE	= 3'b100;
+	
+	// Parameter for SpMV_core Module
+	parameter CORE_WRITE = 3'b100;
+	
+	// Parameter for M10K_read_SRAM0 Module
+	parameter S0_IDLE      = 2'b00;
+	parameter S0_IV_READ   = 2'b01;
+	parameter S0_MV_READ   = 2'b10;
+	parameter S0_READ_DONE = 2'b11;
+	
+	// Parameter for M10K_read_SRAM0 Module
+	parameter S1_READ_DONE = 2'b11;
     
 	reg [2:0] state;
     reg [2:0] next_state;
@@ -29,18 +43,37 @@ module SpMV_ops(
    wire read_done, core_done, write_done;
    wire read_A_done, read_B_done;
    wire core_start;
-   wire o_row_ptr;
-   wire core_done;
-   wire register;
+   wire core_fin;
+   wire core_16;
    
-   assign core_start = (state == READ) && (next_state == CORE);
+   wire [2:0] core_state;
+   wire [1:0] SRAM0_state;
+   wire [1:0] SRAM1_state;
+   
+   reg [7:0] count;
+   
+   wire read_start_IV;
+   wire read_start_MV;
+   wire [255:0] register;
+   wire write_en;
+   wire [135:0] row_ptr;
+   
+   assign write_en = (count == row_ptr[135:128]);
+  
+   assign read_start_IV = (state == IDLE) && (next_state == READ) && (count == 8'b0);
+   assign read_start_MV = (((state == IDLE) && (next_state == READ) && (count[3:0] == 4'b0000)) | ((state == READ) && (SRAM0_state == S0_IV_READ)))? 1'b1: 1'b0;
+   assign read_start_RP = (state == IDLE) && (next_state == READ);
+   assign read_start_CI = (state == IDLE) && (next_state == READ) && (count[5:0] == 6'b0);
+   
+   assign read_A_done = (state == READ) && (SRAM0_state == S0_READ_DONE);
+   assign read_B_done = (state == READ) && (SRAM1_state == S1_READ_DONE);
    assign read_done = (read_A_done && read_B_done)? 1'b1: 1'b0;
    
-
-   wire core_fin;
-   wire [135:0] row_ptr;
-
+   assign core_start = (state == READ) && (next_state == CORE);
+   assign core_done = (state == CORE) && (core_state == CORE_WRITE);
    assign core_fin = (count == row_ptr[135:128])? 1'b1: 1'b0;
+   assign core_16 = (count != 8'b0) && (count[3:0] == 4'b0000);
+  
 
    always @(*) begin
       case(state)
@@ -53,11 +86,9 @@ module SpMV_ops(
             else			next_state <= READ;
          end
          CORE: begin
-			 if(core_done) begin
-				 if(core_fin)	next_state <= WRITE;
-				 else			next_state <= READ;
-			 end
-			 else			next_state <= CORE;
+            if(core_16)       next_state <= READ;
+            else if(core_fin) next_state <= WRITE;
+            else              next_state <= CORE;
          end
          WRITE: begin
             if(write_done)  next_state <= DONE;
@@ -70,13 +101,14 @@ module SpMV_ops(
       endcase
    end
 
-
 	// Decoder for Input Vector
-	wire o_col_idx;
+	wire [3:0] o_col_idx;
 	
+	wire [15:0] mat_vector;
+	wire [255:0] o_in_vector;
 	wire [15:0] in_vector;
-	assign in_vector = o_in_vector[o_col_idx[count*4 +: 4 ]*4 +: 4];
-
+	assign in_vector = o_in_vector[o_col_idx*16 +: 16];
+    
 	// Counter
 	always @(posedge i_clk, negedge i_rstn) begin
 		if(!i_rstn) count <= 256'b0;
@@ -87,60 +119,50 @@ module SpMV_ops(
 		end
 	end		
 
-
-   M10K_read_SRAM0(
+   M10K_read_SRAM0 S0(
       .i_clk(i_clk),
       .i_rstn(i_rstn),
-	  .i_read_start_IV(i_read_start_IV),
-	  .i_read_start_MV(i_read_start_MV),
-	  .count(count),
+	  .i_read_start_IV(read_start_IV),
+	  .i_read_start_MV(read_start_MV),
+	  .i_count(count),
 	
       .i_read_data(i_read_data_A),
       
       .o_read_addr(o_addr_A),
       .o_in_vector(o_in_vector),
-	  .o_mat_vector(o_mat_vector),
-      .o_state(o_state_buffer_A)
+	  .o_mat_vector(mat_vector),
+      .o_state(SRAM0_state)
       );
    
-    M10K_read_SRAM1(
+    M10K_read_SRAM1 S1(
       .i_clk(i_clk),
       .i_rstn(i_rstn),
-	  .i_read_start_RP(i_read_start_RP),
-	  .i_read_start_CI(i_read_start_CI),
-	  .count(count),
+	  .i_read_start_RP(read_start_RP),
+	  .i_read_start_CI(read_start_CI),
+	  .i_count(count),
 	
       .i_read_data(i_read_data_B),
       
       .o_read_addr(o_addr_B),
-      .o_row_ptr(o_row_ptr),
+      .o_row_ptr(row_ptr),
 	  .o_col_idx(o_col_idx),
-      .o_state(o_state_buffer_B)
+      .o_state(SRAM1_state)
       );
 	
-	SpMV_core(
+	SpMV_core core(
 		.i_clk(i_clk),
 		.i_rstn(i_rstn),
 		.i_start(core_start),
 		
-		.i_read_data_A(o_mat_vector),
+		.i_read_data_A(mat_vector),
 		.i_read_data_B(in_vector),
 		.count(count),
-		.row_ptr(o_row_ptr),
+		.row_ptr(row_ptr),
 		
-		.o_done(),
+		.o_state(core_state),
 		.o_register(register)
 	);
 
-	M10K_write_SRAM1(
-		.i_clk(i_clk),
-		.i_rstn(i_rstn),
-		.i_write_start(write_start),
-		.i_write_data(o_register),
-
-		.o_write_data(o_result)
-	);
-		
-        
+    assign o_result = (write_en)? register: 256'b0;
 	 
 	endmodule

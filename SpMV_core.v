@@ -1,5 +1,6 @@
 `timescale 1ns / 1ps
 
+
 module SpMV_core(
 
 	input				i_clk,
@@ -11,7 +12,7 @@ module SpMV_core(
 	input [7:0]			count,
 	input [135:0]		row_ptr,
 	
-	output  			o_done,
+	output [2:0]		o_state,
 	output [255:0]		o_register
 );
 
@@ -30,9 +31,9 @@ module SpMV_core(
 		else			state <= next_state;
 	end
    
-   // Signal Declaration 
+   // Signal Declaration
 	wire w_finish = ((state == WRITE) && ((row_ptr[135:128] == count) | ((count != 8'b0) && (count[3:0] == 4'b0)))) ? 1'b1: 1'b0;
-	assign o_done = w_finish;
+	assign o_state = state;
    
    wire [15:0] mat_vector, in_vector;
    wire [15:0] reg_result;
