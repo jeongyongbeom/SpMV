@@ -9,7 +9,19 @@ module SpMV_ops(
     input [255:0]   i_read_data_A,
     input [255:0]   i_read_data_B,
 
-	output [255:0]   o_result
+	output [255:0]   o_result,
+	output 			 o_wr_en_A,
+	output			 o_wr_en B,
+	output [4:0]	 o_address_A,
+	output [4:0]	 o_address_B,
+
+	output [2:0]	o_state,
+	output [1:0]	o_SRAM0_state,
+	output [1:0] 	o_SRAM1_state,
+	output [1:0]	o_core_state,
+	output [1:0]	o_write_state,
+
+	output			 o_done
 );
     
     // Parameter for SpMV_ops Module
@@ -57,6 +69,11 @@ module SpMV_ops(
    wire [255:0] register;
    wire write_en;
    wire [135:0] row_ptr;
+
+   assign o_SRAM0_state = SRAM0_state;
+   assign o_SRAM0_state = SRAM0_state;
+   assign o_core_state = core_state;
+   assign o_write_state = (write_en)? 1'b1: 0'b0;
    
    assign write_en = (count == row_ptr[135:128]);
   
@@ -73,6 +90,13 @@ module SpMV_ops(
    assign core_done = (state == CORE) && (core_state == CORE_WRITE);
    assign core_fin = (count == row_ptr[135:128])? 1'b1: 1'b0;
    assign core_16 = (count != 8'b0) && (count[3:0] == 4'b0000);
+
+
+   assign o_address_A = address_A;
+   assign o_address_B = (w_en_B)? 16: read_address_B;
+
+   assign o_wr_en_A = 1'b0;
+   assign o_wr_en_B = (write_en == 1'b1)? 1'b1: 1'b0;
   
 
    always @(*) begin
@@ -128,7 +152,7 @@ module SpMV_ops(
 	
       .i_read_data(i_read_data_A),
       
-      .o_read_addr(o_addr_A),
+      .o_read_addr(address_A),
       .o_in_vector(o_in_vector),
 	  .o_mat_vector(mat_vector),
       .o_state(SRAM0_state)
@@ -143,7 +167,7 @@ module SpMV_ops(
 	
       .i_read_data(i_read_data_B),
       
-      .o_read_addr(o_addr_B),
+      .o_read_addr(read_address_B),
       .o_row_ptr(row_ptr),
 	  .o_col_idx(o_col_idx),
       .o_state(SRAM1_state)
