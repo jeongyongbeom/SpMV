@@ -1,4 +1,3 @@
-`timescale 1ns / 1ps
 
 module SpMV_ops(
 
@@ -9,19 +8,18 @@ module SpMV_ops(
     input [255:0]   i_read_data_A,
     input [255:0]   i_read_data_B,
 
-	output [255:0]   o_result,
-	output 			 o_wr_en_A,
-	output			 o_wr_en B,
-	output [4:0]	 o_address_A,
-	output [4:0]	 o_address_B,
-
-	output [2:0]	o_state,
-	output [1:0]	o_SRAM0_state,
-	output [1:0] 	o_SRAM1_state,
-	output [1:0]	o_core_state,
-	output [1:0]	o_write_state,
-
-	output			 o_done
+	output reg [255:0]   o_result,
+	output                 o_wr_en_A,
+	output                 o_wr_en_B,
+	output [4:0]           o_address_A,
+	output [4:0]           o_address_B,
+	
+	output [2:0]           o_state,
+	output [1:0]           o_SRAM0_state,
+	output [1:0]           o_core_state,
+	output                 o_write_state,
+	
+    output                 o_done
 );
     
     // Parameter for SpMV_ops Module
@@ -32,6 +30,7 @@ module SpMV_ops(
 	parameter DONE	= 3'b100;
 	
 	// Parameter for SpMV_core Module
+	parameter CORE_IDLE  = 3'b000;
 	parameter CORE_WRITE = 3'b100;
 	
 	// Parameter for M10K_read_SRAM0 Module
@@ -69,13 +68,15 @@ module SpMV_ops(
    wire [255:0] register;
    wire write_en;
    wire [135:0] row_ptr;
-
-   assign o_SRAM0_state = SRAM0_state;
-   assign o_SRAM0_state = SRAM0_state;
-   assign o_core_state = core_state;
-   assign o_write_state = (write_en)? 1'b1: 0'b0;
    
-   assign write_en = (count == row_ptr[135:128]);
+   wire [4:0] address_A, read_address_B;
+   
+   assign o_SRAM0_state = SRAM0_state;
+   assign o_SRAM1_state = SRAM1_state;
+   assign o_core_state = core_state;
+   assign o_write_state = (write_en)? 1'b1: 1'b0;
+   
+   assign write_en = (state == WRITE);
   
    assign read_start_IV = (state == IDLE) && (next_state == READ) && (count == 8'b0);
    assign read_start_MV = (((state == IDLE) && (next_state == READ) && (count[3:0] == 4'b0000)) | ((state == READ) && (SRAM0_state == S0_IV_READ)))? 1'b1: 1'b0;
@@ -90,13 +91,13 @@ module SpMV_ops(
    assign core_done = (state == CORE) && (core_state == CORE_WRITE);
    assign core_fin = (count == row_ptr[135:128])? 1'b1: 1'b0;
    assign core_16 = (count != 8'b0) && (count[3:0] == 4'b0000);
-
-
+   
    assign o_address_A = address_A;
-   assign o_address_B = (w_en_B)? 16: read_address_B;
-
+   assign o_address_B = (write_en)? 16: read_address_B;
+   
    assign o_wr_en_A = 1'b0;
    assign o_wr_en_B = (write_en == 1'b1)? 1'b1: 1'b0;
+   
   
 
    always @(*) begin
@@ -115,8 +116,7 @@ module SpMV_ops(
             else              next_state <= CORE;
          end
          WRITE: begin
-            if(write_done)  next_state <= DONE;
-            else			next_state <= WRITE;
+                   			next_state <= DONE;
          end
          DONE: begin
 							next_state <= IDLE;
@@ -187,6 +187,12 @@ module SpMV_ops(
 		.o_register(register)
 	);
 
-    assign o_result = (write_en)? register: 256'b0;
+    always @(posedge i_clk, negedge i_rstn) begin
+        if(!i_rstn)      o_result <= 256'b0;
+        else begin
+            if(write_en) o_result <= register;
+            else         o_result <= o_result;
+        end
+    end
 	 
 	endmodule

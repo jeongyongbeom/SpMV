@@ -1,4 +1,3 @@
-
 module SpMV_ops_controller(
     
     input i_clk,
@@ -58,7 +57,7 @@ module SpMV_ops_controller(
 		case(state)
 			POLLING: begin
 				if(poll_done)	next_state <= START;
-				else			next_state <= POLLLING;
+				else			next_state <= POLLING;
 			end
 			START: begin
 								next_state <= OPS;
@@ -84,7 +83,7 @@ module SpMV_ops_controller(
 	assign o_wr_en_B			= ((state == POLLING) || (state == DONE))? 1'b0: ops_wr_en_B;
 	assign o_write_data_A		= 256'b0;
 
-	assign poll_done			= (state == POLLING) && (i_read_data[31:0] == {{31{1'b0}}, 1'b1});
+	assign poll_done			= (state == POLLING) && (i_read_data_A[31:0] == {{31{1'b0}}, 1'b1});
 
 	assign o_done				= (state == DONE);
 	
@@ -112,8 +111,5 @@ module SpMV_ops_controller(
 
 		.o_done(ops_done)
 	);       
-	
-    
     
 endmodule
-
