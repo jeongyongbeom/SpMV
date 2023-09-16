@@ -1,3 +1,4 @@
+`timescale 1ns / 1ps
 
 module SpMV_ops(
 
@@ -196,3 +197,4 @@ module SpMV_ops(
     end
 	 
 	endmodule
+

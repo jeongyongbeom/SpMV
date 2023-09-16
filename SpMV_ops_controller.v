@@ -1,3 +1,5 @@
+`timescale 1ns / 1ps
+
 module SpMV_ops_controller(
     
     input i_clk,
@@ -113,3 +115,4 @@ module SpMV_ops_controller(
 	);       
     
 endmodule
+

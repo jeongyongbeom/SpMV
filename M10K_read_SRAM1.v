@@ -34,8 +34,7 @@ module M10K_read_SRAM1(
     assign read_CI_fin = (state == CI_READ) && (i_count[5:0] == 6'b0);
     assign o_read_addr = (state == RP_READ)? 0:
 						 (state == CI_READ)? 1: 0;
-
-
+    
 	always @(posedge i_clk, negedge i_rstn) begin
 		if(!i_rstn) state <= IDLE;
 		else		state <= next_state;

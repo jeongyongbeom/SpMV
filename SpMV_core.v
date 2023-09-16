@@ -1,6 +1,5 @@
 `timescale 1ns / 1ps
 
-
 module SpMV_core(
 
 	input				i_clk,
@@ -32,7 +31,7 @@ module SpMV_core(
 	end
    
    // Signal Declaration
-	wire w_finish = ((state == WRITE) && ((row_ptr[135:128] == count) | ((count != 8'b0) && (count[3:0] == 4'b0)))) ? 1'b1: 1'b0;
+	wire w_finish = ((state == WRITE) && ((row_ptr[135:128]-1 == count) | ((count != 8'b0) && (count[3:0] == 4'b0)))) ? 1'b1: 1'b0;
 	assign o_state = state;
    
    wire [15:0] mat_vector, in_vector;
@@ -123,4 +122,3 @@ module SpMV_core(
 	);
 
 endmodule
-
