@@ -1,5 +1,6 @@
 `timescale 1ns / 1ps
 
+
 module SpMV_core(
 
 	input				i_clk,
@@ -35,7 +36,6 @@ module SpMV_core(
 	assign o_state = state;
    
    wire [15:0] mat_vector, in_vector;
-   wire [15:0] reg_result;
    
 	// Next State Logic
 	always @(*) begin
