@@ -14,15 +14,15 @@ module SpMV_ops_controller(
 	output					o_wr_en_A,
 	output					o_wr_en_B,
 
-	output					o_state,
-	output					o_SRAM0_state,
-	output					o_SRAM1_state,
-	output					o_core_state,
+	output	[2:0]			o_state,
+	output	[3:0]			o_SRAM0_state,
+	output	[3:0]			o_SRAM1_state,
+	output	[3:0]			o_core_state,
 	output					o_write_state,
 	output					o_done,
     
 	output [255:0]			o_write_data_A,
-    output [255:0]          o_write_data_B
+   output [255:0]          o_write_data_B
     );
     
 	reg  [1:0] state;     
@@ -35,17 +35,25 @@ module SpMV_ops_controller(
 	
 	wire    [2:0]			ops_state             ;
 
-	wire	[3:0]			ops_SRAM0_state       ;
-	wire	[3:0]			ops_SRAM1_state       ;
-	wire	[3:0]			ops_core_state        ;
-	wire	[3:0]			ops_write_state       ;
+	wire	[1:0]			ops_SRAM0_state       ;
+	wire	[1:0]			ops_SRAM1_state       ;
+	wire	[1:0]			ops_core_state        ;
+	wire	[1:0]			ops_write_state       ;
 
 	wire					ops_done              ;
+
+    wire [4:0]              ops_address_A;
+    wire [4:0]              ops_address_B;
 
 	parameter POLLING 			= 2'b11;
 	parameter START				= 2'b00;
 	parameter OPS				= 2'b01;
 	parameter DONE				= 2'b10;
+	
+	assign o_SRAM0_state = ops_SRAM0_state;
+	assign o_SRAM1_state = ops_SRAM1_state;
+	assign o_core_state = ops_core_state;
+	assign o_write_state = ops_write_state;
 
 	
 	always @(posedge i_clk, negedge i_rstn) begin
@@ -89,8 +97,6 @@ module SpMV_ops_controller(
 
 	assign o_done				= (state == DONE);
 	
-
-
 	SpMV_ops ops(
 		.i_clk(i_clk),
 		.i_rstn(i_rstn),
@@ -115,4 +121,3 @@ module SpMV_ops_controller(
 	);       
     
 endmodule
-

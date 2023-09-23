@@ -12,6 +12,8 @@ module SpMV_fp16_add(i_clk, i_rstn, mul_result, reg_result, result);
     
     reg [11:0] b_ALU_result; 
 	 
+	 integer k;
+	 
 	 always @(posedge i_clk, negedge i_rstn) begin
 		if(!i_rstn) result <= 16'b0;
 		else begin

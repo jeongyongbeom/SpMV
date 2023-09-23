@@ -10,11 +10,11 @@ module SpMV_fp16_mul(i_clk, i_rstn, vector, value, result);
     reg [21:0] P;
     
     // Transfer input vector and value to register.
-    always @(posedge i_clk, negedge i_rstn) begin
+    always @(posedge i_clk or negedge i_rstn) begin
         if(!i_rstn) begin
 				result = 16'b0;
         end else begin
-				if((vector[14:10] == 5'b0) | (value[14:10] == 5'b0)) 		result = 16'b0;
+				if((vector[14:10] == 5'b0) | (value[14:10] == 5'b0)) 			result = 16'b0;
 				else if((vector[14:10] == 5'b1) | (value[14:10] == 5'b1))   result = 16'bx;
 				else begin
 				
@@ -29,13 +29,13 @@ module SpMV_fp16_mul(i_clk, i_rstn, vector, value, result);
 					
 					// For Normalize
 					if(P[21] == 1'b1) begin
-						result[14:10] = result[14:10] + 1;
 					    result[9:0] = P[20:11];
-					end else begin
-                  		result[9:0] = P[19:10];
-               		end
+                        result[14:10] = result[14:10] + 1'b1;
+               end else if(P[21] == 1'b0) begin
+                   result[9:0] = P[19:10];
+               end
 				end
+			end
 		end
-	end
 
 endmodule

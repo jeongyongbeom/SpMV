@@ -9,7 +9,7 @@ module SpMV_ops(
     input [255:0]   i_read_data_A,
     input [255:0]   i_read_data_B,
 
-	output reg [255:0]   o_result,
+	output     [255:0]     o_result,
 	output                 o_wr_en_A,
 	output                 o_wr_en_B,
 	output [4:0]           o_address_A,
@@ -17,6 +17,7 @@ module SpMV_ops(
 	
 	output [2:0]           o_state,
 	output [1:0]           o_SRAM0_state,
+	output [1:0]           o_SRAM1_state,
 	output [1:0]           o_core_state,
 	output                 o_write_state,
 	
@@ -71,6 +72,9 @@ module SpMV_ops(
    wire [135:0] row_ptr;
    
    wire [4:0] address_A, read_address_B;
+   
+   assign o_state = state;
+   assign o_done = (state == DONE);
    
    assign o_SRAM0_state = SRAM0_state;
    assign o_SRAM1_state = SRAM1_state;
@@ -187,14 +191,7 @@ module SpMV_ops(
 		.o_state(core_state),
 		.o_register(register)
 	);
+	
+	assign o_result = (write_en)? register: 256'b0;
 
-    always @(posedge i_clk, negedge i_rstn) begin
-        if(!i_rstn)      o_result <= 256'b0;
-        else begin
-            if(write_en) o_result <= register;
-            else         o_result <= o_result;
-        end
-    end
-	 
 	endmodule
-
