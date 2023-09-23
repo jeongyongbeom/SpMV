@@ -1,8 +1,3 @@
-///////////////////////////////////////
-// Compare  matrix multiplicaiton output between SW and HW
-// HOW TO COMPILE :
-// gcc ~/matmul_test.c -o matmul_test
-///////////////////////////////////////
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -29,42 +24,24 @@
 #define HPS_ONCHIP_SPAN         0x00010000
 
 volatile unsigned int * onchip_ptr = NULL ;
-volatile unsigned int * value_ptr = NULL ;
-volatile unsigned int * format_ptr = NULL ;
+volatile unsigned int * in_vector_ptr = NULL ;
+volatile unsigned int * mat_vector_ptr = NULL ;
+volatile unsigned int * row_ptr_ptr = NULL;
+volatile unsigned int * col_idx_ptr = NULL;
 volatile unsigned int * result_ptr = NULL ;
 
 int fd;
 
 int main(void)
 {
+
         int i;
         int j;
         int k;
 
-        // # non-zero data, 차후에 동적할당할 것.
-        int num_nnz = 6;
-
-        // COO Format Data
-        __fp16 coo_value[6] = {1.03, 5.2, 7, 3.1, 10, 2};
-        uint8_t coo_row[6] = {1, 2, 6, 10, 11, 14};
-        uint8_t coo_col[6] = {0, 3, 7, 11, 13, 14};
-
-        __fp16 in_vector[16] = {1, 3.1, 31, 0.41, 0.18, 6.31, 3, 8, 0, 1.2, 57.1, 31.3, 4.1, 1.2, 75, 31};
-
-        // CSR Format Data
-        uint8_t row_counts[16];
-        uint8_t csr_row[17];
-        uint8_t csr_col[3];
-
-        // Encoded Data
-        // value_sw = Input Vector(32-byte) + Value(512-byte)
-        // format_sw = Column Index(128-byte) + Row Pointer(17-byte)
-        __fp16 value_sw[22];
-        uint8_t format_sw[20];
-        __fp16 result_sw[16];
-
         int test=0;
         double a, b, c, d;
+
         struct timespec begin0, end0;
         struct timespec begin1, end1;
         struct timespec begin2, end2;
@@ -87,25 +64,19 @@ int main(void)
                 return(1);
         }
 
-        value_ptr = onchip_ptr + 120;
-        format_ptr = onchip_ptr + 256;
-        result_ptr = onchip_ptr + 384;
-
-		printf("\nonchip_ptr : %x\n", onchip_ptr);
-		printf("\nvalue_ptr : %x\n", value_ptr);
-		printf("\nformat_ptr : %x\n", format_ptr);
-		printf("\nresult_ptr : %x\n", result_ptr);
-
-		printf("\nonchip_ptr data: %d\n", *onchip_ptr);
-		printf("\nvalue_ptr data: %d\n", *value_ptr);
-		printf("\nformat_ptr data: %d\n", *format_ptr);
-		printf("\nresult_ptr data: %d\n", *result_ptr);
+        in_vector_ptr   = onchip_ptr + 120;
+        mat_vector_ptr  = onchip_ptr + 128;
+        row_ptr_ptr             = onchip_ptr + 256;
+        col_idx_ptr             = onchip_ptr + 264;
+        result_ptr              = onchip_ptr + 384;
 
         printf("\nclear result before start\n");
+
         for(i=0; i<8; i++)
         {
                 *(result_ptr + i) = 0;
         }
+
 
         printf("result:\n");
         for(i=0; i<8; i++)
@@ -114,99 +85,49 @@ int main(void)
         }
         printf("\n");
 
+
         //// SW matrix multiplication ////////////////////////////////////////////
 
+        int num_nnz = 8;
         printf("\ninput initialization\n");
         clock_gettime(CLOCK_MONOTONIC, &begin0);
 
+        __fp16 in_vector[16] = {1, 3.1, 31, 0.41, 0.18, 6.31, 3, 8, 0, 1.2, 57.1, 31.3, 4.1, 1.2, 75, 31};
 
-        // Assign input vector to value_sw
-        for(i=0; i<16; i++)
-        {
-                value_sw[i] = in_vector[i];
-        }
-        // Assign matrix value to value_sw
-        for(i=0; i<num_nnz; i++)
-        {
-                value_sw[16+i] = coo_value[i];
-        }
+        __fp16 mat_vector[8] = {1.03, 5.2, 7, 3.1, 10, 2, 9, 7};
 
-        // Encode Row Index to Row Pointer & Assign Row Pointer to format_sw
-        for(i=0; i<16; i++)
-        {
-                row_counts[i] = 0;
-        }
-
-        for(i=0; i<num_nnz; i++)
-        {
-                row_counts[coo_row[i]]++;
-        }
-
-        for(i=0; i<17; i++)
-        {
-                csr_row[i] = 0;
-        }
-
-        for(i=0; i<16; i++)
-        {
-                csr_row[i+1] = csr_row[i] + row_counts[i];
-        }
-
-        for(i=0; i<17; i++)
-        {
-                format_sw[i] = csr_row[i];
-        }
-
-        for(i=0; i<num_nnz/2; i++)
-        {
-                        csr_col[i] = (coo_col[2*i])<<4;
-                        csr_col[i] = csr_col[i] + coo_col[2*i+1];
-                        format_sw[i+17] = csr_col[i];
-        }
+        uint8_t row_ptr[32] = {0, 0, 1, 2, 2, 2, 2, 3, 3, 4, 4, 5, 6, 6, 6, 7, 8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+        uint8_t col_idx[4] = {0x30, 0x75, 0xdb, 0xfe};
 
         clock_gettime(CLOCK_MONOTONIC, &end0);
-        printf("\nin_vector_sw:\n");
+        printf("\nin_vector:\n");
 
         for(i=0; i<16; i++)
         {
-                printf("%f  ", *(value_sw + i));
+                printf("%f  ", *(in_vector + i));
         }
 
-        printf("\nvalue_sw:\n");
+        printf("\nmat_vector:\n");
 
-        for(i=0; i < num_nnz; i++)
+        for(i=0; i <num_nnz; i++)
         {
-                printf("%f  ", *(value_sw + 16 + i));
-         }
+                printf("%f  ", *(mat_vector + i));
+        }
 
-        printf("\ncsr_row_sw:\n");
+        printf("\nrow_ptr:\n");
+
         for(i=0; i<17; i++)
         {
-                printf("%d  ", *(format_sw + i));
+                printf("%d  ", *(row_ptr + i));
         }
 
-        printf("\ncsr_col_sw:\n");
+        printf("\ncol_idx:\n");
         for(i=0; i<num_nnz/2; i++)
         {
-                printf("%x  ", *(format_sw + 17 + i));
+                printf("%x  ", *(col_idx  + i));
         }
-
 
         clock_gettime(CLOCK_MONOTONIC, &begin1);
-
-        // coo format matrix multiplication
-        for(i=0; i<16; i++)
-        {
-                float sum = 0.0;
-                for(j=0; j<num_nnz; j++)
-                {
-                        if(coo_row[j] == i)
-                        {
-                                sum += coo_value[j] * in_vector[coo_col[j]];
-                        }
-                }
-                result_sw[i] = sum;
-        }
 
         clock_gettime(CLOCK_MONOTONIC, &end1);
 
@@ -215,19 +136,28 @@ int main(void)
         //////////////////////////////////////////////////////////////////////////////
 
         //// HW matrix multiplication ///////////////////////////////////////////////
+        printf("\nresult_before_memcpy:\n");
+        for(i=0; i<512; i++)
+        {
+                printf("%d  ", *(onchip_ptr + i));
+        }
+
         printf("\ninput copy to onchip M10K memory\n");
         clock_gettime(CLOCK_MONOTONIC, &begin2);
-        memcpy(value_ptr, value_sw, 22*sizeof(__fp16));
-        memcpy(format_ptr, format_sw, 20*sizeof(uint8_t);
+        memcpy(in_vector_ptr, in_vector, 16*sizeof(__fp16));
+        memcpy(mat_vector_ptr, mat_vector, 8*sizeof(__fp16));
+        memcpy(row_ptr_ptr, row_ptr, 32*sizeof(uint8_t));
+        memcpy(col_idx_ptr, col_idx, 4*sizeof(uint8_t));
         clock_gettime(CLOCK_MONOTONIC, &end2);
-		
-		printf("\nvalue_ptr: %x\n", value_ptr);
-		printf("\nformat_ptr: %x\n", format_ptr);
 
-		printf("\nvalue_ptr data :%f\n", *value_ptr);
-		printf("\nformat_ptr data :%f\n", *format_ptr);
+        printf("\nresul_after_memcpy:\n");
+        for(i=0; i<512; i++)
+        {
+                printf("%d  ", *(onchip_ptr + i));
+        }
 
         printf("\npolling\n");
+
         clock_gettime(CLOCK_MONOTONIC, &begin3);
         *(onchip_ptr) = 1;
         while(*(onchip_ptr) != 0)
@@ -239,60 +169,60 @@ int main(void)
 
         ///////////////////////////////////////////////////////////////////////////////
 
-        printf("value:\n");
-        for(i=0; i<11; i++)
-        {
-                printf("%d  ", *(value_ptr + i));
-        }
-        printf("\nformat:\n");
-        for(i=0; i<5; i++)
-        {
-                printf("%d  ", *(format_ptr + i));
-        }
-
-        printf("\nsw_output:\n");
-        for(i=0; i<16; i++)
-        {
-                printf("%f  ", *(result_sw + i));
-        }
 
         printf("\nresult:\n");
-        for(i=0; i<8; i++)
+        for(i=0; i<512; i++)
         {
-                printf("%d  ", *(result_ptr + i));
+                printf("%d  ", *(onchip_ptr + i));
         }
 
+//      // COMPARE OUTPUT
+//      for(i=0; i<8; i++)
+//      {
+//              for(j=0; j<8; j++)
+//              {
+//                      if(*(result_ptr + i*8 + j) != result_sw[i*8+j])
+//                      {
+//                              test = 1;
+//                      }
+//              }
+//      }
 
-        // COMPARE OUTPUT
-        for(i=0; i<8; i++)
-        {
+        test = 1;
 
-                for(j=0; j<8; j++)
-                {
-                        if(*(result_ptr + i*8 + j) != result_sw[i*8+j])
-                        {
-                                test = 1;
-                        }
-                }
-        }
         printf("\n");
 
         a = ((double)(end0.tv_sec - begin0.tv_sec)*1000000) + ((double)((end0.tv_nsec - begin0.tv_nsec) / 1000));
+
         b = ((double)(end1.tv_sec - begin1.tv_sec)*1000000) + ((double)((end1.tv_nsec - begin1.tv_nsec) / 1000));
+
         c = ((double)(end2.tv_sec - begin2.tv_sec)*1000000) + ((double)((end2.tv_nsec - begin2.tv_nsec) / 1000));
+
         d = ((double)(end3.tv_sec - begin3.tv_sec)*1000000) + ((double)((end3.tv_nsec - begin3.tv_nsec) / 1000));
 
+
+
         if(test == 0)
+
         {
+
                 printf("TEST PASSED!");
+
         }
+
         else if(test == 1)
+
         {
+
                 printf("TEST FAILED!");
+
         }
+
         printf("\n SW matmul performance : %lf us, HW matmul performance : %lf us", b, d);
+
         printf("\n SW data transfer : %lf us, SW to HW data transfer %lf us", a, c);
 
         printf("\n");
 
 }
+
