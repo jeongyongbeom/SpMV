@@ -7,9 +7,6 @@ module SpMV_fp16_add(i_clk, i_rstn, mul_result, reg_result, result);
     
     output reg [15:0] result;
     
-    reg [255:0] matrix [0:15];
-    reg [15:0] sum [0:15];
-    
     reg [11:0] b_ALU_result; 
 	 
 	 integer k;

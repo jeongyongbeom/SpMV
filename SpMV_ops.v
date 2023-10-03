@@ -21,7 +21,7 @@ module SpMV_ops(
 	output [1:0]           o_core_state,
 	output                 o_write_state,
 	
-    output                 o_done
+    output                o_done
 );
     
     // Parameter for SpMV_ops Module
@@ -53,7 +53,7 @@ module SpMV_ops(
    end
    
    // Signal Declaration
-   wire read_done, core_done, write_done;
+   wire read_done, core_done;
    wire read_A_done, read_B_done;
    wire core_start;
    wire core_fin;
@@ -147,6 +147,9 @@ module SpMV_ops(
 			count <= count;
 		end
 	end		
+	
+	//////////////////////TEST DATA////////////////////
+//	assign o_test_data = row_ptr;
 
    M10K_read_SRAM0 S0(
       .i_clk(i_clk),
@@ -174,7 +177,7 @@ module SpMV_ops(
       
       .o_read_addr(read_address_B),
       .o_row_ptr(row_ptr),
-	  .o_col_idx(o_col_idx),
+	   .o_col_idx(o_col_idx),
       .o_state(SRAM1_state)
       );
 	
@@ -192,6 +195,6 @@ module SpMV_ops(
 		.o_register(register)
 	);
 	
-	assign o_result = (write_en)? register: 256'b0;
+	assign o_result = register;
 
 	endmodule
