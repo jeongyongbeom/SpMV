@@ -90,7 +90,7 @@ module SpMV_core(
 	end
 	
 	// To get register address using comparator
-	always @(*) begin
+	always @(posedge i_clk, negedge i_rstn) begin
 		if(!i_rstn) reg_addr <= 4'b0;
 		else begin
 			for(i=0; i<16; i=i+1) begin
